@@ -1,4 +1,4 @@
 <resources>
-    <string name="app_name">اعلایی سرویس</string>
-    <string name="website_url">https://alaeiservice.ir/</string>
+    <string name="app_name">اعلایی ادمین</string>
+    <string name="website_url">https://alaeiservice.ir//admin/index.php</string>
 </resources>
