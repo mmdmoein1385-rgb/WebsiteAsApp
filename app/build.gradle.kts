@@ -7,7 +7,7 @@ android {
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.sharafat.website"
+        applicationId = "ir.alaeiservice.app2"
         minSdk = 24
         targetSdk = 34
         versionCode = 2
