@@ -1,4 +1,4 @@
-name: Build and Sign Release APK
+name: Build and Sign Release APK for Bazaar
 
 on:
   push:
@@ -22,27 +22,47 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
+    # ساخت فایل Release اولیه
     - name: Build Release APK
-      run: ./gradlew assembleRelease
+      run: ./gradlew assembleRelease --no-daemon
 
-    - name: Sign APK for Bazaar
-      uses: rignchen/rsa-action-android-sign@v1.1.3
+    # تولید کلید اختصاصی معتبر به صورت خودکار
+    - name: Generate Keystore
+      run: |
+        keytool -genkeypair -v \
+          -keystore release.keystore \
+          -alias my-key-alias \
+          -keyalg RSA \
+          -keysize 2048 \
+          -validity 10000 \
+          -storepass 12345678 \
+          -keypass 12345678 \
+          -dname "CN=AlaeiService, OU=App, O=Alaei, L=Tehran, S=Tehran, C=IR"
+
+    # امضا کردن فایل APK برای بازار (APK Signer)
+    - name: Sign Android Release APK
+      uses: rjaros/sign-android-release@v1
       with:
         releaseDirectory: app/build/outputs/apk/release
-        signingKey: ${{ secrets.SIGNING_KEY }}
-        keyAlias: ${{ secrets.KEY_ALIAS }}
-        keyPassword: ${{ secrets.KEY_PASSWORD }}
-        keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+        signingKeyBase64: ''
+        alias: my-key-alias
+        keyStorePassword: '12345678'
+        keyPassword: '12345678'
+      env:
+        ANDROID_KEYSTORE_FILE: release.keystore
       continue-on-error: true
 
-    - name: Fallback Signer
-      uses: ilharp/sign-android-release@v1
-      with:
-        releaseDir: app/build/outputs/apk/release
-      continue-on-error: true
+    # روش مستقیم و فوق‌العاده مطمئن با apksigner رسمی اندروید
+    - name: Final Sign with Android Build Tools
+      run: |
+        APK_PATH=$(find app/build/outputs/apk/release -name "*.apk" | head -n 1)
+        if [ -f "$APK_PATH" ]; then
+          $ANDROID_HOME/build-tools/34.0.0/apksigner sign --ks release.keystore --ks-key-alias my-key-alias --ks-pass pass:12345678 --key-pass pass:12345678 --out app/build/outputs/apk/release/Alaei-Market-Signed.apk "$APK_PATH"
+        fi
 
-    - name: Upload Release APK
+    # آپلود فایل نهایی برای دانلود
+    - name: Upload Signed APK
       uses: actions/upload-artifact@v4
       with:
-        name: Alaei-Release-Signed-APK
-        path: app/build/outputs/apk/release/*.apk
+        name: Alaei-Signed-APK
+        path: app/build/outputs/apk/release/Alaei-Market-Signed.apk
