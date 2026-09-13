@@ -7,7 +7,7 @@ android {
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "ir.alaeiservice.app2"
+        applicationId = "ir.alaeiservice.app3"
         minSdk = 24
         targetSdk = 34
         versionCode = 2
